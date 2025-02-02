@@ -2,6 +2,7 @@
 #For full credit, provide answers for at least 6/8 questions
 
 #List names of students collaborating with (no more than 2): 
+# NA (myself; Priscilla Whang)
 
 #GENERAL INFO 
 #data_A contains 12 files of data. 
@@ -15,10 +16,19 @@
 
 ### QUESTION 1 ------ 
 
+# clear console and environment
+cat('\014')
+rm(list = ls())
+
 # Load the readr package
 
 # ANSWER
+library(readr)
 
+# also loading a few more
+library(here)   # need for relative path
+library(dplyr)  # need for relocating cols
+library(readxl) # need for QUESTION 8
 
 ### QUESTION 2 ----- 
 
@@ -37,7 +47,7 @@
 #     3          fas          faster         TRUE   
 #     4          fas          slower         FALSE  
 #     5          fas          faster         TRUE   
-#     6          slo          slower         TRUE
+#     6          slo          slower         TRUE   
 # etc..
 
 # A list of column names are provided to use:
@@ -46,7 +56,14 @@ col_names  <-  c("trial_num","speed_actual","speed_response","correct")
 
 # ANSWER
 
-
+# set relative file path
+ds1 <- read_table(here('data_A', '6191_1.txt'),
+                  col_names = col_names,
+                  skip = 7)
+ds1
+# according to the 'read_table' documentation 
+# (https://www.rdocumentation.org/packages/readr/versions/0.1.1/topics/read_table):
+# skip argument = number of lines to skip before reading data
 
 ### QUESTION 3 ----- 
 
@@ -56,6 +73,20 @@ col_names  <-  c("trial_num","speed_actual","speed_response","correct")
 
 # ANSWER
 
+# create new column
+ds1$trial_num100 <- ds1$trial_num + 100
+
+# relocate column
+ds1 <- ds1 %>%
+  relocate(trial_num100, .after = trial_num)
+
+ds1
+
+# create 'data_cleaned' folder
+dir.create(here('data_cleaned'))
+
+# write .csv
+write_csv(ds1, here('data_cleaned', 'ds1_cleaned.csv'))
 
 ### QUESTION 4 ----- 
 
@@ -63,14 +94,27 @@ col_names  <-  c("trial_num","speed_actual","speed_response","correct")
 # Store it to a variable
 
 # ANSWER
-
+data_A_files <- list.files(here('data_A'), full.names = FALSE)
+data_A_files
 
 ### QUESTION 5 ----- 
 
 # Read all of the files in data_A into a single tibble called ds
 
 # ANSWER
+ds <- read_tsv(here('data_A', data_A_files),
+               col_names = col_names,
+               col_types = cols(
+                 trial_num = col_integer(),
+                 speed_actual = col_character(),
+                 speed_response = col_character(),
+                 correct = col_logical()
+               ),
+               skip = 7,
+               id = 'filename') %>%
+  mutate(filename = basename(filename))
 
+ds # check: 240 obs. = 12 files x 20 trials
 
 ### QUESTION 6 -----
 
@@ -84,6 +128,20 @@ col_names  <-  c("trial_num","speed_actual","speed_response","correct")
 
 # ANSWER
 
+# help !
+?read_tsv
+
+# please see above, QUESTION 5:
+# added col_types
+
+# create new column
+ds$trial_num100 <- ds$trial_num + 100
+
+# relocate column
+ds <- ds %>%
+  relocate(trial_num100, .after = trial_num)
+
+ds
 
 ### QUESTION 7 -----
 
@@ -94,6 +152,8 @@ col_names  <-  c("trial_num","speed_actual","speed_response","correct")
 
 # ANSWER
 
+# please see above, QUESTION 5:
+# added id column and transformed to only grab file basename
 
 ### QUESTION 8 -----
 
@@ -103,3 +163,8 @@ col_names  <-  c("trial_num","speed_actual","speed_response","correct")
 
 # ANSWER
 
+participants <- read_excel(here('data_B', 'participant_info.xlsx'), sheet = 'participant')
+testdates <- read_excel(here('data_B', 'participant_info.xlsx'), sheet = 'testdate')
+
+participants
+testdates
