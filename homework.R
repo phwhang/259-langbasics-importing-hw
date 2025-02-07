@@ -65,6 +65,10 @@ ds1
 # (https://www.rdocumentation.org/packages/readr/versions/0.1.1/topics/read_table):
 # skip argument = number of lines to skip before reading data
 
+#MComment: If you're in the larger working directory (or a project repository), you can just use the below relative path without the here package - 
+ds1 <- read_tsv("data_A/6191_1.txt", skip = 7, col_names = col_names)
+
+
 ### QUESTION 3 ----- 
 
 # For some reason, the trial numbers for this experiment should start at 100
@@ -97,6 +101,9 @@ write_csv(ds1, here('data_cleaned', 'ds1_cleaned.csv'))
 data_A_files <- list.files(here('data_A'), full.names = FALSE)
 data_A_files
 
+#MComment: Try putting the file names in quotes, it should work as well
+data_A_files <- list.files("data_A", full.names = TRUE)
+
 ### QUESTION 5 ----- 
 
 # Read all of the files in data_A into a single tibble called ds
@@ -116,6 +123,9 @@ ds <- read_tsv(here('data_A', data_A_files),
 
 ds # check: 240 obs. = 12 files x 20 trials
 
+#Mcomment: once you make the data_A file, you can just call that on read_tsv
+ds <- read_tsv(fnames, skip = 7, col_names = col_names)
+
 ### QUESTION 6 -----
 
 # Try creating the "add 100" to the trial number variable again
@@ -133,6 +143,9 @@ ds # check: 240 obs. = 12 files x 20 trials
 
 # please see above, QUESTION 5:
 # added col_types
+
+#MComment: Yup I noticed you had already fixed this! See another option below - 
+ds <- read_tsv(fnames, skip = 7, col_names = col_names, col_types = "iccl")
 
 # create new column
 ds$trial_num100 <- ds$trial_num + 100
@@ -155,6 +168,20 @@ ds
 # please see above, QUESTION 5:
 # added id column and transformed to only grab file basename
 
+#MComment: Yupp, looks good! I also have other code for pulling info from the file name below - 
+library(tidyr)
+ds <- ds %>% extract(filename, into = c("id","session"), "(\\d{4})_(\\d{1})") 
+#Extract takes a character variable, names of where to put the extracted data,
+# and then a regular expression saying what pattern to look for.
+# each part in parentheses is one variable to extract
+# \\d{4} means 4 digits, \\d{1} means 1 digit
+
+# Or use "separate", which breaks everything by any delimiter (or a custom one)
+# data_A/6191_1.txt will turn into:
+# data   A   6191   1   txt
+# if we only want to keep 6191 and 1, we can put NAs for the rest
+ds <- ds %>% separate(filename, into = c(NA, NA, "id", "session", NA))
+
 ### QUESTION 8 -----
 
 # Your PI emailed you an Excel file with the list of participant info 
@@ -168,3 +195,6 @@ testdates <- read_excel(here('data_B', 'participant_info.xlsx'), sheet = 'testda
 
 participants
 testdates
+
+#Mcomment: Great! Only thing I'd recommend adding is column names for sheet 2 and using the relative path in ""
+test_dates <- read_xlsx("data_B/participant_info.xlsx", col_names = c("participant", "test_date"), sheet = 2)
